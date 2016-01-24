@@ -9,7 +9,21 @@
 
 </head>
 <body>
+    <div id="listView"></div>
     <div id="map"></div>
+    <div id="searchView">
+        <form data-bind="submit:searchByPhrase">
+            Search by place name: <input type="text" data-bind='value:phraseToSearch, valueUpdate: "afterkeydown"' />
+            <button type="submit" data-bind="enable: phraseToSearch().length > 0">Search</button>
+        </form>
+
+        <p>Search by category:</p>
+        <select multiple="multiple" height="5" data-bind="options:allCategories, selectedOptions:categoriesToSearch"> </select>
+
+        <div>
+            <button data-bind="click: searchByCategories, enable: categoriesToSearch().length > 0">Search</button>
+        </div>
+    </div>
 </body>
     <script src="js/app.js"></script>
     <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&callback=initMap"></script>

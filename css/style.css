@@ -7,3 +7,9 @@ html, body {
 #map {
     height: 100%;
 }
+
+#searchView {
+    background-color: aliceblue;
+    width: 200px;
+    transform: translate3d(10px, -120%, 0);
+}
