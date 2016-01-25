@@ -9,20 +9,23 @@
 
 </head>
 <body>
-    <div id="listView"></div>
     <div id="map"></div>
-    <div id="searchView">
-        <form data-bind="submit:searchByPhrase">
-            Search by place name: <input type="text" data-bind='value:phraseToSearch, valueUpdate: "afterkeydown"' />
-            <button type="submit" data-bind="enable: phraseToSearch().length > 0">Search</button>
+    <div id="filterView">
+        <h4>Filter</h4>
+        <form data-bind="submit:filterByPhrase">
+            Filter by place name: <input type="text" data-bind='value:phraseToFilter, valueUpdate: "afterkeydown"' />
+            <button type="submit" data-bind="enable: phraseToFilter().length > 0">filter</button>
         </form>
 
-        <p>Search by category:</p>
-        <select multiple="multiple" height="5" data-bind="options:allCategories, selectedOptions:categoriesToSearch"> </select>
+        <p>Filter by category:</p>
+        <select multiple="multiple" height="5" data-bind="options:allCategories, selectedOptions:categoriesToFilter"> </select>
 
         <div>
-            <button data-bind="click: searchByCategories, enable: categoriesToSearch().length > 0">Search</button>
+            <button data-bind="click: filterByCategories, enable: categoriesToFilter().length > 0">filter</button>
         </div>
+    </div>
+    <div id="listView">
+        <h4>List of Places</h4>
     </div>
 </body>
     <script src="js/app.js"></script>

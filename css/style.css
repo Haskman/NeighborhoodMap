@@ -8,8 +8,18 @@ html, body {
     height: 100%;
 }
 
-#searchView {
+#filterView {
     background-color: aliceblue;
     width: 200px;
-    transform: translate3d(10px, -120%, 0);
+    bottom: 25px;
+    position: absolute;
+}
+
+#listView {
+    height: 600px;
+    width: 300px;
+    background-color: aliceblue;
+    right: 0px;
+    top: 0px;
+    position:absolute;
 }

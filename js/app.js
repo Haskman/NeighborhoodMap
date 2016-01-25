@@ -36,42 +36,11 @@ var places = [{
 ];
 
 //Global variables
-var map;
-var mapMarkers = [];
+map;
+mapMarkers = ko.observableArray([]);
 
-//Initialize markers
-function MarkerInit(place) {
-    this.title = place.title;
-    this.cords = place.coordinates;
-    this.desc = place.description;
-    this.type = place.type;
 
-    function infoWindowContent(place){
-        var contentString = "<h3>"+this.type+"</h3>"+
-            "<h4>" + this.title + "</h4>"+
-            "<p>"+this.desc+"</p>";
-        return contentString;
-    }
-    var infoWindow = new google.maps.InfoWindow({
-        content: infoWindowContent(place)
-    });
-
-    var marker = new google.maps.Marker({
-        position: new google.maps.LatLng(this.cords),
-        title: this.title,
-        label: this.type,
-        map: map
-    });
-
-    marker.addListener('click', function() {
-        infoWindow.open(map, marker);
-    });
-
-    mapMarkers.push(marker);
-
-}
-
-//Render Map
+//Initialize the map
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat:  33.989474, lng: -84.537597},
@@ -79,19 +48,59 @@ function initMap() {
     });
 
     //Initialize markers
+    function MarkerInit(place) {
+        this.title = place.title;
+        this.cords = place.coordinates;
+        this.desc = place.description;
+        this.type = place.type;
+        this.infoWindow = new google.maps.InfoWindow();
+
+        function infoWindowContent(place){
+            var contentString = "<h3>"+this.type+"</h3>"+
+                "<h4>" + this.title + "</h4>"+
+                "<p>"+this.desc+"</p>";
+            return contentString;
+        }
+        infoWindow = new google.maps.InfoWindow({
+            content: infoWindowContent(place)
+        });
+
+        var marker = new google.maps.Marker({
+            position: new google.maps.LatLng(this.cords),
+            title: this.title,
+            label: this.type,
+            map: map,
+            content: infoWindowContent(place),
+            infoWindow: this.infoWindow
+        });
+
+        mapMarkers().push(marker);
+
+        marker.addListener('click', function() {
+            //Close all infoWindows
+            for (i in mapMarkers()){
+                if(mapMarkers()[i].infoWindow) {
+                    mapMarkers()[i].infoWindow.close();
+                }
+            }
+            this.infoWindow.open(map, marker);
+        });
+
+
+    }
 
     for (i in places){
             MarkerInit(places[i]);
     };
-
-    console.log(mapMarkers);
 }
 
-//Search ViewModel
-var SearchViewModel = function () {
-    this.phraseToSearch = ko.observable("");
 
-    this.allCategories = ko.observableArray([]); //All searchable items
+
+//filter ViewModel
+var filterViewModel = function () {
+    this.phraseToFilter = ko.observable("");
+
+    this.allCategories = ko.observableArray([]); //All filterable items
     for (i in places){
         if (this.allCategories.indexOf(places[i].type) < 0) {
             this.allCategories.push(places[i].type);
@@ -99,35 +108,42 @@ var SearchViewModel = function () {
 
     }
 
-    this.categoriesToSearch = ko.observableArray(["Food"]);// Initial selection since everyone loves food
+    this.categoriesToFilter = ko.observableArray(["Food"]);// Initial selection since everyone loves food
 
 
-    this.searchByPhrase = function () {
+    this.filterByPhrase = function () {
         var markerVisibility;
-        for (i in mapMarkers){
+        for (i in mapMarkers()){
             markerVisibility = true;
-            if (mapMarkers[i].title.toLowerCase().match(this.phraseToSearch().toLowerCase()) == null){
+            if (mapMarkers()[i].title.toLowerCase().match(this.phraseToFilter().toLowerCase()) == null){
                 markerVisibility = false;
             };
-            mapMarkers[i].setVisible(markerVisibility);
+            mapMarkers()[i].setVisible(markerVisibility);
         }
     };
 
-    this.searchByCategories = function () {
+    this.filterByCategories = function () {
         var markerVisibility;
-        for (i in mapMarkers){
+        for (i in mapMarkers()){
             markerVisibility = false;
-            for (j in this.categoriesToSearch()){
-                if (this.categoriesToSearch()[j] == mapMarkers[i].label){
+            for (j in this.categoriesToFilter()){
+                if (this.categoriesToFilter()[j] == mapMarkers()[i].label){
                     markerVisibility = true;
                 }
                 else{
                    continue;
                 }
             }
-            mapMarkers[i].setVisible(markerVisibility);
+            mapMarkers()[i].setVisible(markerVisibility);
         }
     };
 };
 
-ko.applyBindings(new SearchViewModel());
+//List viewmodel
+var listViewModel = function(){
+}
+
+
+
+ko.applyBindings(new filterViewModel(), filterView);
+ko.applyBindings(new listViewModel(), listView);
