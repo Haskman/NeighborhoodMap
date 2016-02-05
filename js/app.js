@@ -1,4 +1,4 @@
-//Place viewModel
+//Place data
 var places = [{
         "title": "Cookout",
         "description": "Cheapest fast food place in the area. The best choice when the fact of being broke becomes more urgent than eating well",
@@ -9,28 +9,28 @@ var places = [{
     {
         "title": "Cobb Center Mall",
         "description": "The nearest mall. Has standard mall stuff.",
-        "coordinates": {lat: 34.017913, lng: -84.563803},
+        "coordinates": {lat: 34.018442, lng:  -84.564487},
         "type": "Shopping"
     },
 
     {
         "title": "Kennesaw Mountain",
         "description": "The local 'mountain'. Place of a battle during the Civil War. Now a good hiking and picnic location for locals and college people going out on Sunday afternoons",
-        "coordinates": {lat:  33.976374, lng: -84.579159},
+        "coordinates": {lat:  33.978166, lng: -84.578104},
         "type": "Landmark"
     },
 
     {
         "title": "Lake Allatoona",
-        "description": "The local lake. Good for swimming in the summer for people who are stuck in the vicinity or any reason",
-        "coordinates": {lat:  34.133102, lng: -84.624366},
+        "description": "The local lake. Good for swimming in the summer for people who are stuck in the vicinity for any reason",
+        "coordinates": {lat:  34.153361, lng: -84.692461},
         "type": "Landmark"
     },
 
     {
         "title": "Kennesaw State University",
         "description": "The local university. I go here.",
-        "coordinates": {lat: 34.038296, lng: -84.583061},
+        "coordinates": {lat: 34.037648, lng: -84.581396},
         "type": "School"
     },
 ];
@@ -58,7 +58,8 @@ function initMap() {
         function infoWindowContent(place){
             var contentString = "<h3>"+this.type+"</h3>"+
                 "<h4>" + this.title + "</h4>"+
-                "<p>"+this.desc+"</p>";
+                "<p>"+this.desc+"</p>"+
+                "<img src='https://maps.googleapis.com/maps/api/streetview?size=400x400&location="+this.cords.lat+","+this.cords.lng+"'></img>";
             return contentString;
         }
         infoWindow = new google.maps.InfoWindow({
@@ -68,7 +69,7 @@ function initMap() {
         var marker = new google.maps.Marker({
             position: new google.maps.LatLng(this.cords),
             title: this.title,
-            label: this.type,
+            type: this.type,
             map: map,
             content: infoWindowContent(place),
             infoWindow: this.infoWindow
@@ -77,12 +78,21 @@ function initMap() {
         mapMarkers().push(marker);
 
         marker.addListener('click', function() {
-            //Close all infoWindows
+            //Close all infoWindows and stop all animations
             for (i in mapMarkers()){
                 if(mapMarkers()[i].infoWindow) {
                     mapMarkers()[i].infoWindow.close();
+                    mapMarkers()[i].setAnimation(null);
                 }
+
             }
+            //Animate marker
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+
+            //Stop animating after 0.75 seconds
+            setTimeout(function(){marker.setAnimation(null);},750);
+
+            //Open current infoWindow
             this.infoWindow.open(map, marker);
         });
 
@@ -94,10 +104,8 @@ function initMap() {
     };
 }
 
-
-
-//filter ViewModel
-var filterViewModel = function () {
+//ViewModel
+var viewModel = function(){
     this.phraseToFilter = ko.observable("");
 
     this.allCategories = ko.observableArray([]); //All filterable items
@@ -109,7 +117,6 @@ var filterViewModel = function () {
     }
 
     this.categoriesToFilter = ko.observableArray(["Food"]);// Initial selection since everyone loves food
-
 
     this.filterByPhrase = function () {
         var markerVisibility;
@@ -127,23 +134,16 @@ var filterViewModel = function () {
         for (i in mapMarkers()){
             markerVisibility = false;
             for (j in this.categoriesToFilter()){
-                if (this.categoriesToFilter()[j] == mapMarkers()[i].label){
+                if (this.categoriesToFilter()[j] == mapMarkers()[i].type){
                     markerVisibility = true;
                 }
                 else{
-                   continue;
+                    continue;
                 }
             }
             mapMarkers()[i].setVisible(markerVisibility);
         }
     };
-};
-
-//List viewmodel
-var listViewModel = function(){
 }
 
-
-
-ko.applyBindings(new filterViewModel(), filterView);
-ko.applyBindings(new listViewModel(), listView);
+ko.applyBindings(new viewModel(), view);
