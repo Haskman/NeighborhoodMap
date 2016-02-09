@@ -37,7 +37,7 @@ var places = [{
 
 //Global variables
 map;
-mapMarkers = ko.observableArray([]);
+placeMarkers = ko.observableArray([]);
 
 
 //Initialize the map
@@ -55,37 +55,44 @@ function initMap() {
         this.type = place.type;
         this.infoWindow = new google.maps.InfoWindow();
 
+        function infoWindowTitle(place){
+            return "<h3 class = 'view-text'>" + this.title + "</h4>";
+        }
+
         function infoWindowContent(place){
-            var contentString = "<h3>"+this.type+"</h3>"+
-                "<h4>" + this.title + "</h4>"+
-                "<p>"+this.desc+"</p>"+
-                "<img src='https://maps.googleapis.com/maps/api/streetview?size=400x400&location="+this.cords.lat+","+this.cords.lng+"'></img>";
+            var contentString = "<h4>"+this.type+"</h4>"+
+                "<p class = 'view-text'>"+this.desc+"</p>"+
+                "<img class = 'view-img' src='https://maps.googleapis.com/maps/api/streetview?size=400x400&location="
+                +this.cords.lat+","+this.cords.lng+"'>";
             return contentString;
         }
         infoWindow = new google.maps.InfoWindow({
-            content: infoWindowContent(place)
+            content: infoWindowTitle(place) + infoWindowContent(place),
+            maxWidth: 200
         });
 
         var marker = new google.maps.Marker({
             position: new google.maps.LatLng(this.cords),
             title: this.title,
+            titleContent: infoWindowTitle(place),
             type: this.type,
             map: map,
             content: infoWindowContent(place),
             infoWindow: this.infoWindow
         });
 
-        mapMarkers().push(marker);
-
         marker.addListener('click', function() {
             //Close all infoWindows and stop all animations
-            for (i in mapMarkers()){
-                if(mapMarkers()[i].infoWindow) {
-                    mapMarkers()[i].infoWindow.close();
-                    mapMarkers()[i].setAnimation(null);
+            for (i in placeMarkers()){
+                if(placeMarkers()[i]().mapMarker.infoWindow) {
+                    placeMarkers()[i]().mapMarker.infoWindow.close();
+                    placeMarkers()[i]().mapMarker.setAnimation(null);
                 }
 
             }
+            //panTo marker
+            map.panTo(this.position);
+
             //Animate marker
             marker.setAnimation(google.maps.Animation.BOUNCE);
 
@@ -95,17 +102,63 @@ function initMap() {
             //Open current infoWindow
             this.infoWindow.open(map, marker);
         });
-
-
+        return marker;
     }
-
+    //Push observable placeMarker object into the global array that is accessible by listView
     for (i in places){
-            MarkerInit(places[i]);
+        var placeMarker = ko.observable({});
+        placeMarker().mapMarker = MarkerInit(places[i]);
+        placeMarker().visible = ko.observable(true);
+        placeMarker().contentVisible = ko.observable(true);
+        placeMarker().titleContent = placeMarker().mapMarker.titleContent;
+        placeMarker().content = placeMarker().mapMarker.content;
+
+        var wikiInit = function(){
+            var wikiMarkup = "";
+
+            var wikiTitle = places[i].title.replace(" ", "_");
+            var wikiURL = "https://en.wikipedia.org/w/api.php?action=query&titles=" + wikiTitle + "&prop=revisions&rvprop=content&rvsection=0&format=json";
+
+            $.ajax({
+                type:"GET",
+                dataType:"json",
+                url: wikiURL,
+
+                success: function(result){
+                    
+                }
+            });
+
+            return wikiMarkup;
+        };
+
+        placeMarker.wikiContent = wikiInit();
+
+        placeMarkers.push(placeMarker);
     };
 }
 
 //ViewModel
 var viewModel = function(){
+
+    self.listContentReveal = function(markerObj) {
+        //for (i in placeMarkers()){
+        //    if(placeMarkers()[i]().mapMarker.infoWindow) {
+        //       placeMarkers()[i]().mapMarker.infoWindow.close();
+        //    }
+        //}
+
+        markerObj.contentVisible(!markerObj.contentVisible());
+
+        if (markerObj.contentVisible()) {
+            map.panTo(markerObj.mapMarker.position);
+            markerObj.mapMarker.infoWindow.open(map, markerObj.mapMarker);
+        }
+        else{
+            markerObj.mapMarker.infoWindow.close();
+        }
+    }
+
     this.phraseToFilter = ko.observable("");
 
     this.allCategories = ko.observableArray([]); //All filterable items
@@ -120,30 +173,32 @@ var viewModel = function(){
 
     this.filterByPhrase = function () {
         var markerVisibility;
-        for (i in mapMarkers()){
+        for (i in placeMarkers()){
             markerVisibility = true;
-            if (mapMarkers()[i].title.toLowerCase().match(this.phraseToFilter().toLowerCase()) == null){
+            if (placeMarkers()[i]().mapMarker.title.toLowerCase().match(this.phraseToFilter().toLowerCase()) == null){
                 markerVisibility = false;
             };
-            mapMarkers()[i].setVisible(markerVisibility);
+            placeMarkers()[i]().visible(markerVisibility);
+            placeMarkers()[i]().mapMarker.setVisible(markerVisibility);
         }
     };
 
     this.filterByCategories = function () {
         var markerVisibility;
-        for (i in mapMarkers()){
+        for (i in placeMarkers()){
             markerVisibility = false;
             for (j in this.categoriesToFilter()){
-                if (this.categoriesToFilter()[j] == mapMarkers()[i].type){
+                if (this.categoriesToFilter()[j] == placeMarkers()[i]().mapMarker.type){
                     markerVisibility = true;
                 }
                 else{
                     continue;
                 }
             }
-            mapMarkers()[i].setVisible(markerVisibility);
+            placeMarkers()[i]().visible(markerVisibility);
+            placeMarkers()[i]().mapMarker.setVisible(markerVisibility);
         }
-    };
-}
+    }
+};
 
 ko.applyBindings(new viewModel(), view);

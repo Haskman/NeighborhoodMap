@@ -25,8 +25,9 @@ html, body {
     overflow:scroll;
 }
 
-.view-img {
-    max-width: 240px;
+.view-img,
+.view-text {
+    width: 100%;
 }
 
 .showItem {

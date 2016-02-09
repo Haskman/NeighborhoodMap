@@ -29,15 +29,15 @@
     </div>
     <div id="listView">
         <h4>List of Places</h4>
-        <ul data-bind="foreach: places">
-            <li>
-                <b class = "viewTitle" data-bind="text: $data.title"></b>
-                <p class = "viewDescription" data-bind="text: $data.description"></p>
+        <ul data-bind="foreach: placeMarkers">
+            <li data-bind="visible: $data.visible">
+                <div data-bind="html: $data.titleContent, click: listContentReveal($data)"></div>
+                <div data-bind="html: $data.content, visible: $data.contentVisible"></div>
             </li>
         </ul>
     </div>
 </div>
 </body>
 <script src="js/app.js"></script>
-<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&callback=initMap"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?callback=initMap"></script>
 </html>
