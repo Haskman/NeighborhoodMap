@@ -1,11 +1,14 @@
-//Place data
+//Global variables
+map;
+placeMarkers = ko.observableArray([]);
+placeWikis = ko.observableArray([]);
 
-var places = [{
-        "title": "Cookout",
-        "description": "Cheapest fast food place in the area. The best choice when the fact of being broke becomes more urgent than eating well",
-        "coordinates": {lat: 34.034523, lng: -84.571618},
-        "type": "Food"
-    },
+places = [{
+    "title": "Cookout",
+    "description": "Cheapest fast food place in the area. The best choice when the fact of being broke becomes more urgent than eating well",
+    "coordinates": {lat: 34.034523, lng: -84.571618},
+    "type": "Food"
+},
 
     {
         "title": "Cobb Center Mall",
@@ -35,11 +38,6 @@ var places = [{
         "type": "School"
     },
 ];
-
-//Global variables
-map;
-placeMarkers = ko.observableArray([]);
-placeWikis = ko.observableArray([]);
 
 
 //Initialize the map
@@ -115,6 +113,7 @@ function initMap() {
         placeMarker().contentVisible = ko.observable(true);
         placeMarker().titleContent = placeMarker().mapMarker.titleContent;
         placeMarker().content = placeMarker().mapMarker.content;
+        placeMarker().wikiContent = ko.observable("");
 
         placeMarkers.push(placeMarker);
     };
@@ -122,29 +121,30 @@ function initMap() {
 
 //ViewModel
 var viewModel = function(){
+    function wikiInit(callback){
+        this.wikiMarkup = "";
 
-    for (i in places) {
-        function wikiInit(callback){
-            this.wikiMarkup = "";
+        var wikiTitle = places[i].title.replace(" ", "_");
+        var wikiURL = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles="+places[i].title;
 
-            var wikiTitle = places[i].title.replace(" ", "_");
-            var wikiURL = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles="+places[i].title;
+        $.ajax({
+            type:"GET",
+            dataType:"jsonp",
+            async: false,
+            url: wikiURL,
 
-            $.ajax({
-                type:"GET",
-                dataType:"jsonp",
-                async: false,
-                url: wikiURL,
 
-                success: function(result){
-                    callback(result.query.pages[Object.keys(result.query.pages)[0]].extract);
-                },
-                error: function(){
+            success: function(result){
 
-                }
-            });
-        };
+                callback(result.query.pages[Object.keys(result.query.pages)[0]].extract);
+            },
+            error: function(){
 
+            }
+        });
+    };
+
+    for (var i = 0; i < places.length; i++) {
         wikiInit(function (wikiString) {
             var wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>" + wikiString + "</p>";
 
@@ -153,6 +153,7 @@ var viewModel = function(){
             console.log(placeWikis());
         });
     }
+
 
     self.listContentReveal = function(markerObj) {
         //for (i in placeMarkers()){
