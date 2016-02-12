@@ -1,8 +1,9 @@
 //Global variables
-map;
+var map;
 placeMarkers = ko.observableArray([]);
 placeWikis = ko.observableArray([]);
 
+//Place data
 places = [{
     "title": "Cookout",
     "description": "Cheapest fast food place in the area. The best choice when the fact of being broke becomes more urgent than eating well",
@@ -62,8 +63,8 @@ function initMap() {
         function infoWindowContent(place){
             var contentString = "<h4>"+this.type+"</h4>"+
                 "<p class = 'view-text'>"+this.desc+"</p>"+
-                "<img class = 'view-img' src='https://maps.googleapis.com/maps/api/streetview?size=400x400&location="
-                +this.cords.lat+","+this.cords.lng+"'>";
+                "<img class = 'view-img' src='https://maps.googleapis.com/maps/api/streetview?size=400x400&location=" +
+                this.cords.lat+","+this.cords.lng+"'>";
             return contentString;
         }
 
@@ -72,6 +73,7 @@ function initMap() {
             maxWidth: 200
         });
 
+        //Marker constructor
         var marker = new google.maps.Marker({
             position: new google.maps.LatLng(this.cords),
             title: this.title,
@@ -84,7 +86,7 @@ function initMap() {
 
         marker.addListener('click', function() {
             //Close all infoWindows and stop all animations
-            for (i in placeMarkers()){
+            for (var i in placeMarkers()){
                 if(placeMarkers()[i]().mapMarker.infoWindow) {
                     placeMarkers()[i]().mapMarker.infoWindow.close();
                     placeMarkers()[i]().mapMarker.setAnimation(null);
@@ -106,7 +108,7 @@ function initMap() {
         return marker;
     }
     //Push observable placeMarker object into the global array that is accessible by listView
-    for (i in places){
+    for (var i = 0; i < places.length; i++){
         var placeMarker = ko.observable({});
         placeMarker().mapMarker = MarkerInit(places[i]);
         placeMarker().visible = ko.observable(true);
@@ -116,7 +118,12 @@ function initMap() {
         placeMarker().wikiContent = ko.observable("");
 
         placeMarkers.push(placeMarker);
-    };
+    }
+}
+
+//Handle error in case Google map fails to load
+function errorMap(){
+    alert("Google Maps API failed to load. Please check your Internet connection");
 }
 
 //ViewModel
@@ -125,54 +132,57 @@ var viewModel = function(){
         this.wikiMarkup = "";
 
         var wikiTitle = places[i].title.replace(" ", "_");
+
+        //URL to search Wikipedia for articles from the title, and extract the introductory sections
         var wikiURL = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles="+places[i].title;
 
+        //AJAX call to Wiki API
         $.ajax({
             type:"GET",
             dataType:"jsonp",
-            async: false,
             url: wikiURL,
 
-
             success: function(result){
-
                 callback(result.query.pages[Object.keys(result.query.pages)[0]].extract);
             },
+            //Error handling in case Wiki articles don't load
             error: function(){
-
+                callback("Failed to retrieve info");
             }
         });
-    };
+    }
 
+    //Loop to make the AJAX call for each place
     for (var i = 0; i < places.length; i++) {
         wikiInit(function (wikiString) {
             var wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>" + wikiString + "</p>";
 
-            placeWikis.push(wikiMarkup);
+            //Push to global array
 
-            console.log(placeWikis());
+            /*TODO: Fix bug that results in randomly arranged placeWikis()[]
+             */
+            placeWikis.push(wikiMarkup);
         });
     }
 
 
     self.listContentReveal = function(markerObj) {
-        //for (i in placeMarkers()){
-        //    if(placeMarkers()[i]().mapMarker.infoWindow) {
-        //       placeMarkers()[i]().mapMarker.infoWindow.close();
-        //    }
-        //}
 
+        //Flip the contentVisible property of each subsection on list
         markerObj.contentVisible(!markerObj.contentVisible());
 
+        //Open infoWindow for the opened list item
         if (markerObj.contentVisible()) {
             map.panTo(markerObj.mapMarker.position);
             markerObj.mapMarker.infoWindow.open(map, markerObj.mapMarker);
         }
         else{
+            //Close the infoWindow for closed list item
             markerObj.mapMarker.infoWindow.close();
         }
-    }
+    };
 
+    //Initialize variables used by the filter
     this.phraseToFilter = ko.observable("");
 
     this.allCategories = ko.observableArray([]); //All filterable items
@@ -185,13 +195,23 @@ var viewModel = function(){
 
     this.categoriesToFilter = ko.observableArray(["Food"]);// Initial selection since everyone loves food
 
+    //Set visibility of all markers to true
+    this.unfilter = function(){
+        for (var i = 0; i<placeMarkers().length; i++) {
+            placeMarkers()[i]().visible(true);
+            placeMarkers()[i]().mapMarker.setVisible(true);
+        }
+    };
+
     this.filterByPhrase = function () {
         var markerVisibility;
-        for (i in placeMarkers()){
+        for (var i = 0; i<placeMarkers().length; i++) {
             markerVisibility = true;
-            if (placeMarkers()[i]().mapMarker.title.toLowerCase().match(this.phraseToFilter().toLowerCase()) == null){
+            //Match titles converted t lower case with search term converted to lower case. If match is null, set markerVisiblity to false
+            if (placeMarkers()[i]().mapMarker.title.toLowerCase().match(this.phraseToFilter().toLowerCase()) === null) {
                 markerVisibility = false;
-            };
+            }
+            //Set marker visibilities using markerVisibility
             placeMarkers()[i]().visible(markerVisibility);
             placeMarkers()[i]().mapMarker.setVisible(markerVisibility);
         }
@@ -199,9 +219,11 @@ var viewModel = function(){
 
     this.filterByCategories = function () {
         var markerVisibility;
-        for (i in placeMarkers()){
+
+        //Nested loop that goes over all selected categories and all places
+        for (var i = 0; i<placeMarkers().length; i++){
             markerVisibility = false;
-            for (j in this.categoriesToFilter()){
+            for (var j in this.categoriesToFilter()){ //Turning this into a regular for loop causes an error: placeMarkers()[i] is not a function
                 if (this.categoriesToFilter()[j] == placeMarkers()[i]().mapMarker.type){
                     markerVisibility = true;
                 }
@@ -209,10 +231,11 @@ var viewModel = function(){
                     continue;
                 }
             }
+            //Set marker visibilities
             placeMarkers()[i]().visible(markerVisibility);
             placeMarkers()[i]().mapMarker.setVisible(markerVisibility);
         }
-    }
+    };
 };
 
 ko.applyBindings(new viewModel(), view);
