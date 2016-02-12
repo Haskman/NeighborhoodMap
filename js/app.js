@@ -61,41 +61,11 @@ function initMap() {
             return "<h3 class = 'view-text'>" + this.title + "</h4>";
         }
 
-        function wikiInit(callback){
-            this.wikiMarkup = "";
-
-            var wikiTitle = places[i].title.replace(" ", "_");
-            var wikiURL = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles="+this.title;
-
-            $.ajax({
-                type:"GET",
-                dataType:"jsonp",
-                async: false,
-                url: wikiURL,
-
-                success: function(result){
-                    callback(result.query.pages[Object.keys(result.query.pages)[0]].extract);
-                },
-                error: function(){
-
-                }
-            });
-        };
-
-        wikiInit(function(wikiString){
-            var wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>" + wikiString + "</p>";
-
-            console.log(wikiMarkup);
-
-            this.wikiContent = wikiMarkup;
-        });
-
         function infoWindowContent(place){
             var contentString = "<h4>"+this.type+"</h4>"+
                 "<p class = 'view-text'>"+this.desc+"</p>"+
                 "<img class = 'view-img' src='https://maps.googleapis.com/maps/api/streetview?size=400x400&location="
-                +this.cords.lat+","+this.cords.lng+"'>"+
-                this.wikiContent;
+                +this.cords.lat+","+this.cords.lng+"'>";
             return contentString;
         }
 
@@ -152,6 +122,37 @@ function initMap() {
 
 //ViewModel
 var viewModel = function(){
+
+    for (i in places) {
+        function wikiInit(callback){
+            this.wikiMarkup = "";
+
+            var wikiTitle = places[i].title.replace(" ", "_");
+            var wikiURL = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&explaintext=&titles="+places[i].title;
+
+            $.ajax({
+                type:"GET",
+                dataType:"jsonp",
+                async: false,
+                url: wikiURL,
+
+                success: function(result){
+                    callback(result.query.pages[Object.keys(result.query.pages)[0]].extract);
+                },
+                error: function(){
+
+                }
+            });
+        };
+
+        wikiInit(function (wikiString) {
+            var wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>" + wikiString + "</p>";
+
+            placeWikis.push(wikiMarkup);
+
+            console.log(placeWikis());
+        });
+    }
 
     self.listContentReveal = function(markerObj) {
         //for (i in placeMarkers()){

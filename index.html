@@ -33,8 +33,7 @@
             <li data-bind="visible: $data.visible">
                 <div data-bind="html: $data.titleContent, click: listContentReveal($data)"></div>
                 <div data-bind="html: $data.content, visible: $data.contentVisible"></div>
-                <div data-bind="foreach: placeWikis, $data.contentVisible">
-                    <div data-bind="html: $data.wikiContent, visible: $data.contentVisible"></div>
+                <div data-bind="html: placeWikis()[$index()], visible: $data.contentVisible">
                 </div>
             </li>
         </ul>
