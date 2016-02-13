@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Neighborhood Map</title>
     <script src="js/knockout-3.4.0.js"></script>
     <script src="js/jQuery.js"></script>
@@ -13,6 +14,7 @@
     <div id="filterView">
         <h4>Filter</h4>
 
+        <!-- TODO: Implement live search -->
         <button data-bind="click: unfilter">Unfilter</button>
         <p> </p>
 
@@ -26,6 +28,7 @@
                 data-bind="options:allCategories, selectedOptions:categoriesToFilter"> </select>
 
         <div>
+            <!-- TODO: Implement live search -->
             <button data-bind="click: filterByCategories, enable: categoriesToFilter().length > 0">filter</button>
         </div>
     </div>

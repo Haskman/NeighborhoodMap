@@ -99,8 +99,8 @@ function initMap() {
             //Animate marker
             marker.setAnimation(google.maps.Animation.BOUNCE);
 
-            //Stop animating after 0.75 seconds
-            setTimeout(function(){marker.setAnimation(null);},750);
+            //Stop animating after 0.7 seconds
+            setTimeout(function(){marker.setAnimation(null);},700);
 
             //Open current infoWindow
             this.infoWindow.open(map, marker);
@@ -123,7 +123,7 @@ function initMap() {
 
 //Handle error in case Google map fails to load
 function errorMap(){
-    alert("Google Maps API failed to load. Please check your Internet connection");
+    alert("Google Maps failed to load. Please check your Internet connection");
 }
 
 //ViewModel
@@ -154,14 +154,24 @@ var viewModel = function(){
 
     //Loop to make the AJAX call for each place
     for (var i = 0; i < places.length; i++) {
+        //TODO: Carry function definition outside loop without breaking anything
         wikiInit(function (wikiString) {
-            var wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>" + wikiString + "</p>";
+
+            var wikiMarkup;
+
+            //Check if returned string is empty and instantiate the markup string to push
+            if (wikiString === "")
+            {
+                wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>Could not find article</p>";
+            }
+            else {
+                wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>" + wikiString + "</p>";
+            }
 
             //Push to global array
-
             /*TODO: Fix bug that results in randomly arranged placeWikis()[]
              */
-            placeWikis.push(wikiMarkup);
+            setTimeout(placeWikis.push(wikiMarkup),500);
         });
     }
 
@@ -171,10 +181,11 @@ var viewModel = function(){
         //Flip the contentVisible property of each subsection on list
         markerObj.contentVisible(!markerObj.contentVisible());
 
-        //Open infoWindow for the opened list item
+        //Trigger the click even on the marker for the opened list item
         if (markerObj.contentVisible()) {
-            map.panTo(markerObj.mapMarker.position);
-            markerObj.mapMarker.infoWindow.open(map, markerObj.mapMarker);
+            //map.panTo(markerObj.mapMarker.position);
+            //markerObj.mapMarker.infoWindow.open(map, markerObj.mapMarker);
+            google.maps.event.trigger(markerObj.mapMarker, 'click');
         }
         else{
             //Close the infoWindow for closed list item
