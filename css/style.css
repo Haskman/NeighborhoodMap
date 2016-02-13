@@ -10,14 +10,14 @@ html, body {
 
 #filterView {
     background-color: rgba(240, 248, 255, 0.5);
-    width: 200px;
+    width: 12vw;
     bottom: 25px;
     position: absolute;
 }
 
 #listView {
-    height: 600px;
-    width: 300px;
+    height: 50vh;
+    width: 20vw;
     background-color: rgba(240, 248, 255, 0.5);
     right: 0px;
     top: 0px;
