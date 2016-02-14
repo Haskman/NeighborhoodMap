@@ -10,19 +10,18 @@ html, body {
 
 #filterView {
     background-color: rgba(240, 248, 255, 0.5);
-    width: 12vw;
     bottom: 25px;
     position: absolute;
 }
 
 #listView {
-    height: 50vh;
-    width: 20vw;
     background-color: rgba(240, 248, 255, 0.5);
     right: 0px;
     top: 0px;
     position:absolute;
     overflow:scroll;
+    max-width: 25vw;
+    max-height: 100vh;
 }
 
 .view-img,

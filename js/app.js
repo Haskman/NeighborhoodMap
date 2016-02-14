@@ -1,7 +1,6 @@
 //Global variables
 var map;
 placeMarkers = ko.observableArray([]);
-placeWikis = ko.observableArray([]);
 
 //Place data
 places = [{
@@ -119,6 +118,9 @@ function initMap() {
 
         placeMarkers.push(placeMarker);
     }
+
+    //Apply bindings after populating placeMarkers()[]
+    ko.applyBindings(new viewModel(), view);
 }
 
 //Handle error in case Google map fails to load
@@ -128,7 +130,22 @@ function errorMap(){
 
 //ViewModel
 var viewModel = function(){
-    function wikiInit(callback){
+
+    //Variables for search and list view visiblities
+    self.searchVisible = ko.observable(true);
+    self.listVisible = ko.observable(true);
+
+    //Flip list visibility
+    self.listReveal = function(){
+        self.listVisible(!self.listVisible());
+    };
+
+    //Flip search visibility
+    self.searchReveal = function(){
+        self.searchVisible(!self.searchVisible());
+    };
+
+    function wikiInit(callback, index){
         this.wikiMarkup = "";
 
         var wikiTitle = places[i].title.replace(" ", "_");
@@ -143,7 +160,7 @@ var viewModel = function(){
             url: wikiURL,
 
             success: function(result){
-                callback(result.query.pages[Object.keys(result.query.pages)[0]].extract);
+                callback(result.query.pages[Object.keys(result.query.pages)[0]].extract, index);
             },
             //Error handling in case Wiki articles don't load
             error: function(){
@@ -155,7 +172,7 @@ var viewModel = function(){
     //Loop to make the AJAX call for each place
     for (var i = 0; i < places.length; i++) {
         //TODO: Carry function definition outside loop without breaking anything
-        wikiInit(function (wikiString) {
+        wikiInit(function (wikiString, index) {
 
             var wikiMarkup;
 
@@ -165,14 +182,12 @@ var viewModel = function(){
                 wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>Could not find article</p>";
             }
             else {
-                wikiMarkup = "<h4>Wikipedia:</h4>" + "<p>" + wikiString + "</p>";
+                wikiMarkup = "<h4>Wikipedia:</h4>" + "<p class='view-text'>" + wikiString + "</p>";
             }
 
-            //Push to global array
-            /*TODO: Fix bug that results in randomly arranged placeWikis()[]
-             */
-            setTimeout(placeWikis.push(wikiMarkup),500);
-        });
+            //Push wiki content too placeMarkers()[]
+            placeMarkers()[index]().wikiContent(wikiMarkup);
+        }, i);
     }
 
 
@@ -249,4 +264,3 @@ var viewModel = function(){
     };
 };
 
-ko.applyBindings(new viewModel(), view);
